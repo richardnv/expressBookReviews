@@ -44,60 +44,81 @@ public_users.get('/',function (req, res) {
 });
 
 // Get book details based on ISBN
-// This will always return an error "Not Found" 
-// because the "books" data in bookdb.js 
-// contains no ISBN property.
+// assumes that the key is the ISBN.
 public_users.get('/isbn/:isbn',function (req, res) {
-    let isbn = req.params.isbn;  
-    if (isbn) {
-        let isbnbooks = books.filter((book) => book.isbn === isbn);
-        if (isbnbooks) {
-            return res.send(JSON.stringify(isbnbooks));
-        } else {
-            return res.send(JSON.stringify("Sory no book found with this ISBN ${isbn}!"));
-        }
-    } 
-    return res.send(JSON.stringify("message: Please supply an ISBN!"));
+    let isbn = req.params.isbn;
+    let book = null;
+    Object.keys(books).forEach(key => {        
+        if (key === isbn) {
+            book = books[key];
+        }        
+    });
+    if (book){
+        return res.status(200).json(book);
+    } else {
+        return res.status(210).json({message: `No books with isbn: ${isbn} found!`});
+    }
 });
   
 // Get book details based on author
 public_users.get('/author/:author',function (req, res) {
-    const author = req.params.author;    
-    let outmsg = "";
-    let booksByAuthor = [];
     
-    if (author){            
-        let bookCount = books.length;    
-        for (let i = 1; i < bookCount; i++) {            
-            let auth = books[i].author;
-            let title = books[i].title;
-            if (auth === author){            
-                outmsg += "Author: " + auth + " Title: " + title + ", "
-            }
-            // if (book.author === author){
-            //     booksByAuthor.push(book);
-            // }
-        }  
-        //if (booksByAuthor.length > 0){            
-            return res.send(JSON.stringify(outmsg));           
-        // } else {
-        //     return res.send(JSON.stringify("No books found by author " + author + " !"));
-        // }
-    }    
-    return res.send(JSON.stringify("Please supply an author!"));
+    let author = req.params.author;
+    let authorBooks = new Array;
+    let bookCount = 0;
+    let authors = "";
+    Object.keys(books).forEach(key => {
+        bookCount += 1;
+        authors += books[key].author + ", ";
+        if (books[key].author === author) {
+            authorBooks.push(books[key]);
+        }       
+    });
+    if (authorBooks.length > 0){
+        // return res.send(`Found ${authorBooks.length} Books By ${author}: ${JSON.stringify(authorBooks)}`);
+        return res.status(200).json(authorBooks);
+    } else {
+        return res.send(JSON.stringify(`${authorBooks.length} out of ${bookCount} Books by Authors: ${authors} Found`));    
+    }
+    
  
 });
 
 // Get all books based on title
 public_users.get('/title/:title',function (req, res) {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+    //Write your code here
+    let title = req.params.title;
+    let titleBooks = new Array;
+    Object.keys(books).forEach(key => {
+        if (books[key].title === title) {
+            titleBooks.push(books[key]);
+        }       
+    });
+    if (titleBooks.length > 0){
+        // return res.send(`Found ${authorBooks.length} Books By ${author}: ${JSON.stringify(authorBooks)}`);
+        return res.status(200).json(titleBooks);
+    } else {
+        return res.send(JSON.stringify(`${titleBooks.length} out of ${bookCount} Books by Authors: ${authors} Found`));    
+    }
+    
 });
 
 //  Get book review
 public_users.get('/review/:isbn',function (req, res) {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+    let isbn = req.params.isbn;
+    let reviews = new Array;
+    Object.keys(books).forEach(key => {        
+        if (books[key] === isbn) {
+            let book = books[key];
+            let reviews = book.reviews;            
+        }       
+    });
+    if (reviews.length > 0){
+        // return res.send(`Found ${authorBooks.length} Books By ${author}: ${JSON.stringify(authorBooks)}`);
+        return res.status(200).json(reviews);
+    } else {
+        return res.status(210).json(`No Reviews found for isbn ${isbn}`);            
+    }
 });
 
 module.exports.general = public_users;
