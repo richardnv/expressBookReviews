@@ -30,7 +30,23 @@ const authenticatedUser = (username,password)=>{
 
 //only registered users can login
 regd_users.post("/login", (req,res) => {
-  //Write your code here
+  const username = req.body.username;
+  const password = req.body.password;
+  
+    if (!username || !password) {
+        return res.status(300).json({ message: "username and/or password were not supplied" });
+    }
+    // Generate JWT access token
+    let accessToken = jwt.sign({
+        data: user
+    }, 'access', { expiresIn: 60 * 60});
+
+    // Store access token in session
+    req.session.authorization = {
+        accessToken
+    }
+    return res.status(200).send("User successfully logged in");
+
   return res.status(300).json({message: "Yet to be implemented"});
 });
 
