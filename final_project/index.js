@@ -10,23 +10,27 @@ app.use(express.json());
 
 app.use("/customer",session({secret:"fingerprint_customer",resave: true, saveUninitialized: true}))
 
-app.use("/customer/auth/*", function auth(req,res,next){
-    // Authenticate user
-    const user = req.body.user;
-    if (!user) {
-        return res.status(404).json({ message: "Body Empty" });
-    }
-    // Generate JWT access token
-    let accessToken = jwt.sign({
-        data: user
-    }, 'access', { expiresIn: 60 * 60 });
+// app.use("/customer/auth/*", function auth(req,res,next){
+//     // Authenticate user
+//     console.log(req.session);
+    
+//         const user = req.body.user;
+//         if (!user) {
+//             return res.status(404).json({ message: "Body Empty" });
+//         }
+//         // Generate JWT access token
+//         let accessToken = jwt.sign({
+//             data: user
+//         }, 'access', { expiresIn: 60 * 60 });
 
-    // Store access token in session
-    req.session.authorization = {
-        accessToken
-    }
-    return res.status(200).send("User successfully logged in");
-});
+//         // Store access token in session
+//         req.session.authorization = {
+//             accessToken
+//         }
+        
+//         return res.status(200).send("User successfully logged in");
+//     next
+// });
  
 const PORT =5000;
 

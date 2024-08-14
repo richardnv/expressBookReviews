@@ -30,8 +30,9 @@ const authenticatedUser = (username,password)=>{
 
 //only registered users can login
 regd_users.post("/login", (req,res) => {
-  const username = req.body.username;
-  const password = req.body.password;
+    const user = req.body.user;
+  const username = user.username;
+  const password = user.password;
   
     if (!username || !password) {
         return res.status(300).json({ message: "username and/or password were not supplied" });
@@ -47,13 +48,27 @@ regd_users.post("/login", (req,res) => {
     }
     return res.status(200).send("User successfully logged in");
 
-  return res.status(300).json({message: "Yet to be implemented"});
+ //return res.status(300).json({message: "Yet to be implemented"});
 });
 
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
   //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+  const isbn = req.params.isbn;
+  const review = req.params.review;
+  const user = req.body.user;
+  if (authenticatedUser(user.username, user.password)){
+    let book = null;
+    Object.keys(books).forEach(key => {        
+        if (key === isbn) {
+            book = books[key];
+        }        
+    });
+    if (book){
+        book.reviews.push(`{ "Reviewer": ${user.username}, "Review": ${review} }`);
+    }
+  }
+  return res.status(200).json({message: "Review Saved: " + review});
 });
 
 module.exports.authenticated = regd_users;
