@@ -28,6 +28,31 @@ const authenticatedUser = (username,password)=>{
     }
 }
 
+function addReview(bookId, reviewId, reviewContent) {
+    if (books[bookId]) {
+        books[bookId].reviews[reviewId] = reviewContent;
+        console.log(`Review ${reviewId} added/updated on Book ${bookId}.`);
+    } else {
+        console.log(`Book with ID ${bookId} does not exist.`);
+    }
+}
+
+function deleteReview(bookId, reviewId) {
+    if (books[bookId] && books[bookId].reviews[reviewId]) {
+        delete books[bookId].reviews[reviewId];
+        console.log(`Review ${reviewId} removed from book ${bookId}.`);
+    } else {
+        console.log(`Review ${reviewId} not found for book ${bookId}.`);
+    }
+}
+
+function usernameFromToken(token){    
+    const decoded = jwt.verify(token, 'fingerprint_customer');
+    return decoded.data;
+}
+
+
+
 //only registered users can login
 regd_users.post("/login", (req,res) => {
     const user = req.body.user;
@@ -39,13 +64,14 @@ regd_users.post("/login", (req,res) => {
     }
     // Generate JWT access token
     let accessToken = jwt.sign({
-        data: user
+        data: user.username
     }, 'fingerprint_customer', { expiresIn: "1h"});
 
     // Store access token in session
     req.session.authorization = {
         accessToken
     }
+    
     return res.status(200).send("User successfully logged in");
 });
 
@@ -53,54 +79,22 @@ regd_users.post("/login", (req,res) => {
 regd_users.put("/auth/review/:isbn", (req, res) => {
   //Write your code here
   const isbn = req.params.isbn;  
-  const user = req.body.user;
-  const reviewText = req.body.reviewText;
+  const token = req.session.authorization.accessToken;  
+  const username = usernameFromToken(token);
+  const reviewText = req.body.review.text;
   
-  //if (authenticatedUser(user.username, user.password)){
-    let book = null;    
-    Object.keys(books).forEach(key => {        
-        if (key === isbn) {
-            book = books[key];
-        }        
-    });
-    // if a book was found
-    if (book){
-        // isolate the reviews for this book.
-        let reviews = book.reviews;        
-        let review = null;
-        // assume that the reviews element exists.
-        // it may be blank.        
-        // if book has 1 or more reviews   
-        Object.keys(reviews).forEach(review => {
-        // find the review belonging to this user
-            if (key === user.username) {
-                review = reviews[key];
-            }
-        })
+  addReview(isbn, username, reviewText);  
+  return res.status(200).json({ message: "Review Saved" });
+});
 
-        // if review exists
-        if (review){
-            if (reviewText) {
-                let newreview = {
-                    reviewer: user.username,
-                    text: reviewText
-                };
-                review.assign(review, newreview);
-                // replace the original reviewtext with the new reviewtext            
-                return res.status(200).json({message: "review was updated"});
-            } else {
-                return res.status(301).json({message: "No text was provided for this review."});
-            }
-        } else {
-            // create a review for this bool for this user with the new reviewText 
-            let newreview = { reviewer: user.username, text: reviewText }
-            reviews.append(newreview);
-            return res.status(200).json({message: "review was saved"});
-        }                
-    } else {
-        return res.status(402).json({ message: "No Book found"});
-    }    
-    
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+    //Write your code here
+    const isbn = req.params.isbn;  
+    const token = req.session.authorization.accessToken;
+    const username = usernameFromToken(token);
+        
+    deleteReview(isbn, username);  
+    return res.status(200).json({ message: "Review removed" });
 });
 
 module.exports.authenticated = regd_users;
