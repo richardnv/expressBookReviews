@@ -54,26 +54,53 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
   //Write your code here
   const isbn = req.params.isbn;  
   const user = req.body.user;
-  const reviewText = req.body.review;
+  const reviewText = req.body.reviewText;
   
   //if (authenticatedUser(user.username, user.password)){
-    let book = null;
+    let book = null;    
     Object.keys(books).forEach(key => {        
         if (key === isbn) {
-            reviews = books[key].reviews;
+            book = books[key];
         }        
     });
-    if (reviews){
-        reviews = reviewText;
-        return res.status(200).json(book);
-    }
-        //book.reviews.append({ "review": reviewText });
-        
-    // } else {
-    //     return res.status(300).json({message: `No Book found`})
-    // }
-  //}
-  
+    // if a book was found
+    if (book){
+        // isolate the reviews for this book.
+        let reviews = book.reviews;        
+        let review = null;
+        // assume that the reviews element exists.
+        // it may be blank.        
+        // if book has 1 or more reviews   
+        Object.keys(reviews).forEach(review => {
+        // find the review belonging to this user
+            if (key === user.username) {
+                review = reviews[key];
+            }
+        })
+
+        // if review exists
+        if (review){
+            if (reviewText) {
+                let newreview = {
+                    reviewer: user.username,
+                    text: reviewText
+                };
+                review.assign(review, newreview);
+                // replace the original reviewtext with the new reviewtext            
+                return res.status(200).json({message: "review was updated"});
+            } else {
+                return res.status(301).json({message: "No text was provided for this review."});
+            }
+        } else {
+            // create a review for this bool for this user with the new reviewText 
+            let newreview = { reviewer: user.username, text: reviewText }
+            reviews.append(newreview);
+            return res.status(200).json({message: "review was saved"});
+        }                
+    } else {
+        return res.status(402).json({ message: "No Book found"});
+    }    
+    
 });
 
 module.exports.authenticated = regd_users;
